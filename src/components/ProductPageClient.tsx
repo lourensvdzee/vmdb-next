@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Star, Leaf, Package, Info, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -102,11 +103,11 @@ export default function ProductPageClient({
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{product.product_name}</h1>
             <p className="text-xl text-muted-foreground mb-4">{product.brand}</p>
 
-            {/* Rating with animated stars */}
-            {avgRating && (
-              <div className="flex items-center gap-4 mb-6">
+            {/* Rating with animated stars - always show, with Rate button */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-2">
                 <AnimatedStarRating
-                  rating={parseFloat(avgRating)}
+                  rating={avgRating ? parseFloat(avgRating) : 0}
                   size="lg"
                   showValue={true}
                 />
@@ -114,7 +115,19 @@ export default function ProductPageClient({
                   ({comments.length} {comments.length === 1 ? 'review' : 'reviews'})
                 </span>
               </div>
-            )}
+              <Button
+                variant="default"
+                size="default"
+                onClick={() => {
+                  // Scroll to review form
+                  document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="gap-2"
+              >
+                <Star className="h-4 w-4" />
+                Rate
+              </Button>
+            </div>
 
             {/* Sub-Ratings */}
             <div className="mb-6">
@@ -338,38 +351,59 @@ export default function ProductPageClient({
         />
 
         {/* Review Form */}
-        <div className="mb-8">
+        <div id="review-form" className="mb-8">
           <ReviewForm productId={product.product_id} productName={product.product_name} />
         </div>
 
         {/* Reviews section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Reviews ({comments.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {comments.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">No reviews yet. Be the first to review this product!</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {comments.map((comment) => {
-                  const displayName = comment.display_name || comment.author_name || 'Anonymous';
-                  const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold">Reviews</h2>
+            <Button
+              onClick={() => document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth' })}
+              size="lg"
+            >
+              <Star className="mr-2 h-5 w-5" />
+              Leave a Review
+            </Button>
+          </div>
 
-                  return (
-                    <div key={comment.comment_id} className="border-b pb-6 last:border-0 last:pb-0">
+          {comments.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground mb-4">No reviews yet. Be the first to review this product!</p>
+                <Button onClick={() => document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Write a Review
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {comments.map((comment) => {
+                const displayName = comment.display_name || comment.author_name || 'Anonymous';
+                const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
+                return (
+                  <Card key={comment.comment_id}>
+                    <CardContent className="pt-6">
                       <div className="flex items-start gap-4">
-                        <Avatar className="h-10 w-10">
+                        <Avatar
+                          className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => comment.user_id && router.push(`/profile/${comment.user_id}`)}
+                        >
                           {comment.avatar_url && <AvatarImage src={comment.avatar_url} alt={displayName} />}
                           <AvatarFallback className="text-sm">{initials}</AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1">
-                          <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-start justify-between mb-3">
                             <div>
-                              <p className="font-semibold">{displayName}</p>
+                              <p
+                                className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => comment.user_id && router.push(`/profile/${comment.user_id}`)}
+                              >
+                                {displayName}
+                              </p>
                               <p className="text-sm text-muted-foreground">
                                 {new Date(comment.comment_date).toLocaleDateString('en-US', {
                                   year: 'numeric',
@@ -399,13 +433,13 @@ export default function ProductPageClient({
                           )}
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Animated Subtitle Carousel */}

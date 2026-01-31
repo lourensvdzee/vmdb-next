@@ -242,8 +242,17 @@ const RecommendedProducts = ({ currentProductId, currentProductCategory }: Recom
                 <p className="text-sm text-muted-foreground truncate">{product.brand}</p>
                 {product.avg_rating ? (
                   <div className="flex items-center gap-1 mt-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{product.avg_rating.toFixed(1)} / 5</span>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-4 w-4 ${
+                          star <= Math.round(product.avg_rating!)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "fill-muted text-muted"
+                        }`}
+                      />
+                    ))}
+                    <span className="text-sm font-medium ml-1">{product.avg_rating.toFixed(1)} / 5</span>
                   </div>
                 ) : (
                   <div className="h-5 mt-1" />
