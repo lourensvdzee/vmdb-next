@@ -23,7 +23,7 @@ export const GROUPING_RULES: Record<string, CategoryRule> = {
   'SCHNITZEL': { keywords: ['schnitzel', 'cordon bleu'], nl: 'Schnitzel', de: 'Schnitzel', en: 'Schnitzel' },
   'STRIPS': { keywords: ['strips', 'reepjes', 'stroken'], nl: 'Reepjes', de: 'Streifen', en: 'Strips' },
   'MEATBALLS': { keywords: ['hackbällchen', 'gemüsebällchen', 'falafel', 'frikadelle', 'meatball', 'gehaktbal', 'bal'], nl: 'Gehaktballen', de: 'Hackbällchen', en: 'Meatballs' },
-  'DELI': { keywords: ['brotbelag', 'cold cut', 'opsnij', 'vleeswaren', 'lachsschinken', 'lachschinken'], nl: 'Vleeswaren', de: 'Aufschnitt', en: 'Deli' },
+  'DELI': { keywords: ['brotbelag', 'cold cut', 'opsnij', 'vleeswaren', 'lachsschinken', 'lachschinken'], nl: 'Broodbeleg', de: 'Aufschnitt', en: 'Deli' },
   'BACON': { keywords: ['bacon', 'spek', 'spekjes', 'speck'], nl: 'Spek', de: 'Speck', en: 'Bacon' },
   'BEEF': { keywords: ['rind', 'rindfleisch', 'beef', 'steak', 'biefstuk'], nl: 'Rund', de: 'Rind', en: 'Beef' },
   'FILET': { keywords: ['filet', 'fillet'], nl: 'Filet', de: 'Filet', en: 'Filet' },
