@@ -68,13 +68,13 @@ export async function generateMetadata({
   // Build description with product info and rating
   const baseDescription = product.short_description
     || product.description
-    || `Plant-based ${product.category || 'meat alternative'} by ${product.brand}`;
+    || `Plant-based ${product.category || 'meat alternative'} from ${product.brand}`;
 
   const metaDescription = `${baseDescription.length > 100 ? baseDescription.substring(0, 97) + '...' : baseDescription}${ratingText}`;
 
-  // Enhanced title with brand
-  const title = `${product.brand} - ${product.product_name}`;
-  const ogTitle = `${product.product_name} by ${product.brand} - Plant-based meat`;
+  // Enhanced title with brand - format: "Product Name from Brand"
+  const title = `${product.product_name} from ${product.brand}`;
+  const ogTitle = `${product.product_name} from ${product.brand} - Plant-based meat`;
 
   const productUrl = `https://vmdb.me/product/${product.product_id}${product.slug ? `/${product.slug}` : ''}`;
   const imageUrl = product.product_image_url || 'https://vmdb.me/logo.png';
@@ -82,7 +82,7 @@ export async function generateMetadata({
   // Social sharing description - more engaging
   const socialDescription = ratingText
     ? `See our community's rating for ${product.product_name} from ${product.brand}${ratingText}. Discover plant-based meat alternatives on VMDb.`
-    : `Discover ${product.product_name} by ${product.brand}. Read reviews and ratings for this plant-based meat alternative on VMDb.`;
+    : `Discover ${product.product_name} from ${product.brand}. Read reviews and ratings for this plant-based meat alternative on VMDb.`;
 
   return {
     title: `${title} | VMDb`,

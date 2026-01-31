@@ -162,7 +162,9 @@ const ReviewDialog = ({ open, onOpenChange, productId, productName, productCateg
 
         if (otpError) {
           console.error('Magic link error:', otpError);
-          toast.success("Review submitted! Check your email to create your VMDb account.");
+          // Show review success but warn about email issue
+          toast.success("Review submitted successfully!");
+          toast.error(`Could not send account email: ${otpError.message}. Contact support if this persists.`);
         } else {
           toast.success("Review submitted! Check your email to create your VMDb account and unlock more features.");
         }

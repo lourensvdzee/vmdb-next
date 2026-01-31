@@ -51,7 +51,10 @@ export default function HeaderClient() {
 
   // Track if initial session check is done (to avoid showing welcome toast on page load)
   const initialSessionCheckedRef = useRef(false);
-  const hasShownWelcomeRef = useRef(false);
+  // Use sessionStorage to persist welcome toast state across tab switches (but reset on browser close)
+  const hasShownWelcomeRef = useRef(
+    typeof window !== 'undefined' && sessionStorage.getItem('vmdb_welcome_shown') === 'true'
+  );
   const [availableCountries] = useState<string[]>(['Germany', 'Netherlands']);
   const [countryDraft, setCountryDraft] = useState<string>(activeCountryName || '');
 
@@ -113,9 +116,11 @@ export default function HeaderClient() {
             setUsername(data?.name || data?.username || null);
           });
 
-        // Show welcome toast on sign-in (but not on initial page load)
+        // Show welcome toast on sign-in (but not on initial page load or tab switch)
         if (event === 'SIGNED_IN' && initialSessionCheckedRef.current && !hasShownWelcomeRef.current) {
           hasShownWelcomeRef.current = true;
+          // Persist in sessionStorage so it survives tab switches but resets on browser close
+          try { sessionStorage.setItem('vmdb_welcome_shown', 'true'); } catch {}
 
           // Check if this is a returning user (had reviews before)
           supabase
@@ -135,6 +140,7 @@ export default function HeaderClient() {
         setUsername(null);
         // Reset welcome toast flag on sign out
         hasShownWelcomeRef.current = false;
+        try { sessionStorage.removeItem('vmdb_welcome_shown'); } catch {}
       }
 
       // Mark initial session check as done
@@ -150,10 +156,10 @@ export default function HeaderClient() {
   useEffect(() => {
     if (justDetected) {
       const label = activeCountryName || 'World';
-      toast.message(`We've matched products to your country: ${label}.`, {
+      toast.message(`Showing products available in ${label} (based on your location).`, {
         position: 'top-center',
         action: {
-          label: 'Change?',
+          label: 'Change',
           onClick: () => setCountryDialogOpen(true),
         },
       });
