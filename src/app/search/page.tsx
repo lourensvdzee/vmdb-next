@@ -19,6 +19,18 @@ const COUNTRY_ISO_MAP: Record<string, string> = {
   'Germany': 'DE',
 };
 
+// Helper to convert string/boolean/number to actual boolean (matches Vite version)
+function toBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const v = value.toLowerCase().trim();
+    if (['true', '1', 'yes', 'y'].includes(v)) return true;
+    return false;
+  }
+  if (typeof value === 'number') return value === 1;
+  return false;
+}
+
 export const metadata: Metadata = {
   title: 'Search Products | VMDb',
   description: 'Search and filter plant-based meat alternatives on VMDb.',
@@ -92,7 +104,7 @@ async function getProducts(country?: string) {
     });
   }
 
-  // Transform to match expected format
+  // Transform to match expected format (using toBoolean for vegan to match Vite)
   return products.map(p => ({
     id: p.product_id,
     name: p.product_name,
@@ -100,7 +112,7 @@ async function getProducts(country?: string) {
     brand: p.brand,
     category: p.category,
     slug: p.slug,
-    vegan: p.is_vegan,
+    vegan: toBoolean(p.is_vegan),
     storeOfPurchase: p.store_name,
     rating: ratingsMap.get(p.product_id) || 0,
   }));
@@ -155,7 +167,7 @@ export default async function SearchPage() {
   ]);
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="container px-4 py-4 sm:py-8">
       <SearchClient
         initialProducts={products}
         categoryStats={categoryStats}

@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import { GROUPING_RULES } from "@/lib/categories";
 
 interface Product {
   id: number;
@@ -78,15 +77,15 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
       filtered = filtered.filter(p => p.vegan);
     }
 
-    // Apply category filter using GROUPING_RULES keywords
+    // Apply category filter using subcategories from categoryStats (matches Vite behavior)
     if (selectedCategory !== "all") {
-      const rule = GROUPING_RULES[selectedCategory];
-      if (rule) {
-        filtered = filtered.filter(p => {
-          if (!p.category) return false;
-          const lowerCategory = p.category.toLowerCase();
-          return rule.keywords.some(keyword => lowerCategory.includes(keyword));
-        });
+      const categoryGroup = categoryStats.find(cs => cs.category === selectedCategory);
+
+      if (categoryGroup && categoryGroup.subcategories.length > 0) {
+        // Filter by any of the subcategories in the group
+        filtered = filtered.filter(p =>
+          categoryGroup.subcategories.includes(p.category || '')
+        );
       } else {
         // Fallback: direct match
         filtered = filtered.filter(p => p.category === selectedCategory);
@@ -147,7 +146,7 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
   return (
     <>
       {/* Back to Home Button */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Link href="/">
           <Button variant="ghost" size="sm" className="gap-2 -ml-2">
             <ArrowLeft className="h-4 w-4" />
@@ -158,7 +157,7 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
       </div>
 
       {/* Search Bar */}
-      <form onSubmit={handleSearch} className="mx-auto max-w-xl mb-8">
+      <form onSubmit={handleSearch} className="mx-auto max-w-xl mb-4 sm:mb-8">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -168,16 +167,16 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
             placeholder="Search plant-based meat..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12"
+            className="pl-10 h-10 sm:h-12 placeholder:text-xs sm:placeholder:text-sm"
             autoComplete="off"
           />
         </div>
       </form>
 
       {/* Filters and Sort */}
-      <div className="mb-6 space-y-4">
+      <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
         <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
-          {/* Filter label */}
+          {/* Filter label - hidden on mobile */}
           <div className="hidden sm:flex items-center gap-2">
             <Filter className="h-5 w-5 text-muted-foreground" />
             <span className="font-medium">Filters:</span>
@@ -188,16 +187,16 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
             variant={veganOnly ? "default" : "outline"}
             size="sm"
             onClick={() => setVeganOnly(!veganOnly)}
-            className="text-sm gap-1"
+            className="text-xs sm:text-sm gap-1"
           >
-            <Leaf className="h-4 w-4" />
+            <Leaf className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">100% Vegan Only</span>
             <span className="sm:hidden">Vegan</span>
           </Button>
 
           {/* Category Filter */}
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className={`w-[140px] sm:w-[180px] h-10 text-sm ${selectedCategory !== "all" ? "border-primary bg-primary/10" : ""}`}>
+            <SelectTrigger className={`w-[130px] sm:w-[180px] h-8 sm:h-10 text-xs sm:text-sm [&>span]:text-left [&>span]:truncate [&>span]:block ${selectedCategory !== "all" ? "border-primary bg-primary/10" : ""}`}>
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -213,7 +212,7 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
           {/* Store Filter */}
           {stores.length > 0 && (
             <Select value={selectedStore} onValueChange={setSelectedStore}>
-              <SelectTrigger className={`w-[120px] sm:w-[180px] h-10 text-sm ${selectedStore !== "all" ? "border-primary bg-primary/10" : ""}`}>
+              <SelectTrigger className={`w-[110px] sm:w-[180px] h-8 sm:h-10 text-xs sm:text-sm [&>span]:text-left [&>span]:truncate [&>span]:block ${selectedStore !== "all" ? "border-primary bg-primary/10" : ""}`}>
                 <SelectValue placeholder="Store" />
               </SelectTrigger>
               <SelectContent>
@@ -256,18 +255,18 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
       </div>
 
       {/* Results Count with Sort */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between gap-4 mb-2">
-          <h1 className="text-2xl font-bold">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center justify-between gap-4 mb-1 sm:mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold">
             {searchQuery ? `Results for "${searchQuery}"` : "All Products"}
-          </h1>
+          </h2>
 
           {/* Sort Options */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Sort:</span>
             <ArrowUpDown className="h-4 w-4 text-muted-foreground sm:hidden" />
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[120px] sm:w-[160px] h-10 text-sm">
+              <SelectTrigger className="w-[100px] sm:w-[160px] h-8 sm:h-10 text-xs sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -278,7 +277,7 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
             </Select>
           </div>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Found {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
         </p>
       </div>
