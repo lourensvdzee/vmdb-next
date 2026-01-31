@@ -1,0 +1,235 @@
+import { createClient } from '@/lib/supabase/server';
+import Link from 'next/link';
+import HomeHero from '@/components/HomeHero';
+import CategoryScroll from '@/components/CategoryScroll';
+import HorizontalProductScroll from '@/components/HorizontalProductScroll';
+import HorizontalReviewScroll from '@/components/HorizontalReviewScroll';
+import AnimatedSubtitle from '@/components/AnimatedSubtitle';
+
+// Category grouping rules
+const GROUPING_RULES: Record<string, { keywords: string[]; en: string }> = {
+  'BURGER': { keywords: ['burger'], en: 'Burgers' },
+  'SAUSAGES': { keywords: ['wurst', 'bratwurst', 'leberwurst', 'sausage', 'worst', 'hotdog'], en: 'Sausages' },
+  'NUGGETS': { keywords: ['nugget', 'bites'], en: 'Nuggets' },
+  'CHICKEN': { keywords: ['kip', 'kipfilet', 'kipschnitzel', 'chicken', 'döner', 'doner', 'gyros', 'kebab'], en: 'Chicken' },
+  'MINCE': { keywords: ['mince', 'gehakt'], en: 'Mince' },
+  'SCHNITZEL': { keywords: ['schnitzel', 'cordon bleu'], en: 'Schnitzel' },
+  'MEATBALLS': { keywords: ['hackbällchen', 'gemüsebällchen', 'falafel', 'frikadelle', 'meatball', 'gehaktbal', 'bal'], en: 'Meatballs' },
+  'DELI': { keywords: ['brotbelag', 'cold cut', 'opsnij', 'vleeswaren', 'lachsschinken'], en: 'Deli' },
+  'BACON': { keywords: ['bacon', 'spek', 'spekjes', 'speck'], en: 'Bacon' },
+  'FISH': { keywords: ['fisch', 'fischstäbchen', 'fish', 'vis', 'zalm', 'tuna', 'tonijn'], en: 'Fish' },
+  'TOFU': { keywords: ['tofu', 'tempeh'], en: 'Tofu' },
+};
+
+interface CategoryStats {
+  category: string;
+  displayName: string;
+  count: number;
+}
+
+// Fetch top rated products with ratings
+async function getTopProducts() {
+  const supabase = await createClient();
+
+  const { data: products } = await supabase
+    .from('products')
+    .select('product_id, product_name, product_image_url, brand, category, slug, is_vegan')
+    .eq('product_status', 'publish')
+    .limit(100);
+
+  if (!products || products.length === 0) return [];
+
+  const productIds = products.map(p => p.product_id);
+  const { data: comments } = await supabase
+    .from('comments')
+    .select('product_id, overall_rating')
+    .in('product_id', productIds)
+    .eq('is_approved', 1);
+
+  const ratingsMap = new Map<number, number>();
+  if (comments) {
+    const ratingsByProduct = new Map<number, number[]>();
+    comments.forEach(c => {
+      if (c.overall_rating != null && c.overall_rating > 0) {
+        const existing = ratingsByProduct.get(c.product_id) || [];
+        existing.push(c.overall_rating);
+        ratingsByProduct.set(c.product_id, existing);
+      }
+    });
+    ratingsByProduct.forEach((ratings, productId) => {
+      const avg = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+      ratingsMap.set(productId, avg);
+    });
+  }
+
+  return products
+    .map(p => ({
+      id: p.product_id,
+      name: p.product_name,
+      image: p.product_image_url,
+      brand: p.brand,
+      category: p.category,
+      slug: p.slug,
+      vegan: p.is_vegan,
+      rating: ratingsMap.get(p.product_id) || 0,
+    }))
+    .filter(p => p.rating > 0)
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 12);
+}
+
+// Fetch grouped categories with counts
+async function getCategories(): Promise<CategoryStats[]> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from('products')
+    .select('category')
+    .eq('product_status', 'publish');
+
+  if (!data) return [];
+
+  const categoryCounts = new Map<string, number>();
+  data.forEach(p => {
+    if (p.category) {
+      const category = p.category.trim();
+      categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+    }
+  });
+
+  const grouped = new Map<string, { count: number; displayName: string }>();
+
+  Object.entries(GROUPING_RULES).forEach(([key, rule]) => {
+    grouped.set(key, { count: 0, displayName: rule.en });
+  });
+
+  categoryCounts.forEach((count, category) => {
+    const lowerCategory = category.toLowerCase().trim();
+
+    for (const [groupKey, rule] of Object.entries(GROUPING_RULES)) {
+      if (rule.keywords.some(keyword => lowerCategory.includes(keyword))) {
+        const current = grouped.get(groupKey)!;
+        current.count += count;
+        return;
+      }
+    }
+  });
+
+  return Array.from(grouped.entries())
+    .filter(([, data]) => data.count > 0)
+    .map(([category, data]) => ({
+      category,
+      displayName: data.displayName,
+      count: data.count,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+// Fetch latest reviews
+async function getLatestReviews() {
+  const supabase = await createClient();
+
+  const { data: comments } = await supabase
+    .from('comments')
+    .select(`
+      comment_id,
+      comment_text,
+      overall_rating,
+      comment_date,
+      author_name,
+      product_id,
+      user_id
+    `)
+    .eq('is_approved', 1)
+    .not('comment_text', 'is', null)
+    .order('comment_date', { ascending: false })
+    .limit(12);
+
+  if (!comments || comments.length === 0) return [];
+
+  const productIds = [...new Set(comments.map(c => c.product_id))];
+  const { data: products } = await supabase
+    .from('products')
+    .select('product_id, product_name, product_image_url, brand, slug')
+    .in('product_id', productIds);
+
+  const productMap = new Map(products?.map(p => [p.product_id, p]) || []);
+
+  const userIds = comments.map(c => c.user_id).filter(Boolean);
+  const { data: profiles } = userIds.length > 0
+    ? await supabase
+        .from('profiles')
+        .select('id, avatar_url')
+        .in('id', userIds)
+    : { data: [] };
+
+  const profileMap = new Map<string, { id: string; avatar_url: string | null }>(
+    profiles?.map(p => [p.id, p] as const) || []
+  );
+
+  return comments.map(comment => ({
+    comment: {
+      ...comment,
+      authorAvatar: comment.user_id ? profileMap.get(comment.user_id)?.avatar_url || null : null
+    },
+    product: productMap.get(comment.product_id) || null,
+  }));
+}
+
+export default async function HomePage() {
+  const [topProducts, categories, latestReviews] = await Promise.all([
+    getTopProducts(),
+    getCategories(),
+    getLatestReviews(),
+  ]);
+
+  return (
+    <main>
+      {/* Hero Section with Video Background */}
+      <HomeHero />
+
+      {/* Category Stats - Browse by Category */}
+      {categories.length > 0 && (
+        <section className="py-12 bg-background">
+          <div className="container mx-auto px-4">
+            <Link href="/search" className="block mb-6 hover:opacity-80 transition-opacity">
+              <h2 className="text-3xl font-bold">Browse by Category</h2>
+            </Link>
+            <CategoryScroll categories={categories} />
+          </div>
+        </section>
+      )}
+
+      {/* Top Rated Products - Horizontal Scroll */}
+      {topProducts.length > 0 && (
+        <section className="py-12 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <Link href="/search?sort=rating" className="block mb-6 hover:opacity-80 transition-opacity">
+              <h2 className="text-3xl font-bold">Top Rated Products</h2>
+            </Link>
+            <HorizontalProductScroll products={topProducts} />
+          </div>
+        </section>
+      )}
+
+      {/* Latest Reviews */}
+      {latestReviews.length > 0 && (
+        <section className="py-12 bg-background">
+          <div className="container mx-auto px-4">
+            <Link href="/search" className="block mb-6 hover:opacity-80 transition-opacity">
+              <h2 className="text-3xl font-bold">Latest Reviews</h2>
+            </Link>
+            <HorizontalReviewScroll reviews={latestReviews} />
+          </div>
+        </section>
+      )}
+
+      {/* Animated Subtitle Carousel */}
+      <div className="bg-primary py-8">
+        <div className="container mx-auto px-4 flex justify-center">
+          <AnimatedSubtitle />
+        </div>
+      </div>
+    </main>
+  );
+}
