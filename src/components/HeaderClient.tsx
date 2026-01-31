@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, LogIn, LogOut, User as UserIcon, Wrench } from "lucide-react";
@@ -48,6 +48,10 @@ export default function HeaderClient() {
   // Country selection
   const { activeCountryCode, activeCountryName, justDetected, setCountryOverride, clearCountryOverride } = useCountry();
   const [countryDialogOpen, setCountryDialogOpen] = useState(false);
+
+  // Track if initial session check is done (to avoid showing welcome toast on page load)
+  const initialSessionCheckedRef = useRef(false);
+  const hasShownWelcomeRef = useRef(false);
   const [availableCountries] = useState<string[]>(['Germany', 'Netherlands']);
   const [countryDraft, setCountryDraft] = useState<string>(activeCountryName || '');
 
@@ -96,8 +100,9 @@ export default function HeaderClient() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+
       if (session?.user) {
         supabase
           .from("profiles")
@@ -107,8 +112,34 @@ export default function HeaderClient() {
           .then(({ data }) => {
             setUsername(data?.name || data?.username || null);
           });
+
+        // Show welcome toast on sign-in (but not on initial page load)
+        if (event === 'SIGNED_IN' && initialSessionCheckedRef.current && !hasShownWelcomeRef.current) {
+          hasShownWelcomeRef.current = true;
+
+          // Check if this is a returning user (had reviews before)
+          supabase
+            .from('comments')
+            .select('comment_id')
+            .eq('user_id', session.user.id)
+            .limit(1)
+            .then(({ data: existingReviews }) => {
+              if (existingReviews && existingReviews.length > 0) {
+                toast.success('Welcome back to VMDb! Continue discovering plant-based alternatives.');
+              } else {
+                toast.success('Welcome to VMDb! Start rating and help others discover tastier, greener choices!');
+              }
+            });
+        }
       } else {
         setUsername(null);
+        // Reset welcome toast flag on sign out
+        hasShownWelcomeRef.current = false;
+      }
+
+      // Mark initial session check as done
+      if (!initialSessionCheckedRef.current) {
+        initialSessionCheckedRef.current = true;
       }
     });
 
