@@ -452,7 +452,7 @@ export default function HeaderClient() {
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <a href="http://localhost:5173/admin" target="_blank" rel="noopener noreferrer">
+                      <a href="https://admin.vmdb.me/admin" target="_blank" rel="noopener noreferrer">
                         <Wrench className="mr-2 h-4 w-4" />
                         Admin
                       </a>

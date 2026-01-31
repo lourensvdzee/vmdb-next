@@ -33,13 +33,13 @@ export default function AdminPage() {
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground text-center">
               For product approvals, review management, and other admin tasks,
-              please access the admin dashboard on the original Vite application.
+              please access the admin dashboard.
             </p>
 
             <div className="flex justify-center pt-4">
               <Button asChild>
                 <a
-                  href="http://localhost:5173/admin"
+                  href="https://admin.vmdb.me/admin"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
@@ -49,10 +49,6 @@ export default function AdminPage() {
                 </a>
               </Button>
             </div>
-
-            <p className="text-xs text-muted-foreground text-center pt-4">
-              Note: Make sure the Vite development server is running on port 5173.
-            </p>
           </CardContent>
         </Card>
       </div>
