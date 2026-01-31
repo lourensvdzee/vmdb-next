@@ -149,7 +149,8 @@ export default function HomeHero() {
 
           {/* Tagline */}
           <p className="text-xl md:text-2xl font-semibold italic text-white tracking-wide max-w-3xl">
-            Start rating, and help the community<br className="hidden md:block" />
+            Start rating, and help the community{" "}
+            <br className="hidden md:block" />
             make better plant-based choices!
           </p>
         </div>

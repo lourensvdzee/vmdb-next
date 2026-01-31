@@ -198,7 +198,7 @@ export default function ProductPageClient({
                         rel="noopener noreferrer"
                         className="block group"
                       >
-                        <div className="h-16 w-20 sm:h-20 sm:w-24 rounded-md bg-white flex items-center justify-center p-2.5 sm:p-3 hover:shadow-lg transition-all cursor-pointer border">
+                        <div className="h-16 w-20 sm:h-20 sm:w-24 rounded-md bg-white flex items-center justify-center p-2.5 sm:p-3 hover:shadow-lg transition-all cursor-pointer">
                           {logoSrc ? (
                             <img
                               src={logoSrc}
@@ -212,7 +212,7 @@ export default function ProductPageClient({
                         </div>
                       </a>
                     ) : (
-                      <div key={idx} className="h-16 w-20 sm:h-20 sm:w-24 rounded-md bg-gray-100 flex items-center justify-center p-2.5 sm:p-3 opacity-50 border">
+                      <div key={idx} className="h-16 w-20 sm:h-20 sm:w-24 rounded-md bg-gray-100 flex items-center justify-center p-2.5 sm:p-3 opacity-50">
                         {logoSrc ? (
                           <img
                             src={logoSrc}
