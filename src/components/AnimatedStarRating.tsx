@@ -102,7 +102,7 @@ const AnimatedStarRating = ({
             transitionDelay: isVisible ? `${maxStars * 100}ms` : "0ms",
           }}
         >
-          {rating.toFixed(1)}
+          {rating.toFixed(1)} / 5
         </span>
       )}
     </div>

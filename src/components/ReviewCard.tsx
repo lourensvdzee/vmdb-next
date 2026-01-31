@@ -84,7 +84,7 @@ export default function ReviewCard({ comment, product }: ReviewCardProps) {
                 </div>
               );
             })}
-            <span className="ml-2 text-base font-semibold">{rating.toFixed(1)}</span>
+            <span className="ml-2 text-base font-semibold">{rating.toFixed(1)} / 5</span>
           </div>
 
           {/* Review Text */}

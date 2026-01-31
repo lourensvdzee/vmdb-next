@@ -243,7 +243,7 @@ const RecommendedProducts = ({ currentProductId, currentProductCategory }: Recom
                 {product.avg_rating ? (
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{product.avg_rating.toFixed(1)}</span>
+                    <span className="text-sm font-medium">{product.avg_rating.toFixed(1)} / 5</span>
                   </div>
                 ) : (
                   <div className="h-5 mt-1" />

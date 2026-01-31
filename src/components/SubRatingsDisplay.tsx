@@ -102,7 +102,7 @@ export default function SubRatingsDisplay({
       <div className="space-y-1">
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium">{label}</span>
-          <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
+          <span className="text-sm font-semibold">{rating.toFixed(1)} / 5</span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
