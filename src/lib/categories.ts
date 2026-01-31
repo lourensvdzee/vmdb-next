@@ -61,13 +61,14 @@ export function groupCategories(
   categoryCounts.forEach((count, category) => {
     const lowerCategory = category.toLowerCase().trim();
 
-    // Check against each grouping rule
+    // Check against each grouping rule (allow multi-category matching)
     for (const [groupName, rule] of Object.entries(GROUPING_RULES)) {
       if (rule.keywords.some(keyword => lowerCategory.includes(keyword))) {
         const group = grouped.get(groupName)!;
         group.subcategories.add(category);
         group.count += count;
-        return;
+        // Don't return - continue checking for multi-category matches
+        // e.g., "Kipfilet" matches both CHICKEN (kip) and FILET (filet)
       }
     }
   });
