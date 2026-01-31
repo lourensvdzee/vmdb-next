@@ -94,7 +94,7 @@ export default function HomeHero() {
           />
 
           {/* Stylized Title */}
-          <h1 className="text-5xl md:text-6xl font-bold mb-8 text-white tracking-tight [text-rendering:optimizeLegibility] [-webkit-font-smoothing:antialiased]">
+          <h1 className="text-5xl md:text-6xl font-display mb-8 text-white tracking-tight [text-rendering:optimizeLegibility] [-webkit-font-smoothing:antialiased] [-moz-osx-font-smoothing:grayscale]">
             <span style={{ WebkitTextStroke: '1px white', WebkitTextFillColor: 'transparent', color: 'transparent' }}>V</span>
             EGA(N){' '}
             <span style={{ WebkitTextStroke: '1px white', WebkitTextFillColor: 'transparent', color: 'transparent' }}>M</span>

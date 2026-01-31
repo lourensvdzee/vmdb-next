@@ -1,6 +1,17 @@
 import { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import SearchClient from './SearchClient';
+import { groupCategories, CategoryStats } from '@/lib/categories';
+
+// Map ISO code to country name
+function mapIsoToCountry(code?: string): string | undefined {
+  if (!code) return undefined;
+  const upper = code.toUpperCase();
+  if (upper === 'DE') return 'Germany';
+  if (upper === 'NL') return 'Netherlands';
+  return undefined;
+}
 
 export const metadata: Metadata = {
   title: 'Search Products | VMDb',
@@ -75,8 +86,8 @@ async function getProducts() {
   }));
 }
 
-// Fetch category counts
-async function getCategoryStats() {
+// Fetch category counts with localization
+async function getCategoryStats(country?: string): Promise<CategoryStats[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -89,23 +100,26 @@ async function getCategoryStats() {
   }
 
   // Count products per category
-  const counts: Record<string, number> = {};
+  const categoryCounts = new Map<string, number>();
   data.forEach(p => {
     if (p.category) {
-      counts[p.category] = (counts[p.category] || 0) + 1;
+      const category = p.category.trim();
+      categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
     }
   });
 
-  // Convert to array sorted by count
-  return Object.entries(counts)
-    .map(([category, count]) => ({ category, count }))
-    .sort((a, b) => b.count - a.count);
+  return groupCategories(categoryCounts, country);
 }
 
 export default async function SearchPage() {
+  // Read country from cookie for localization
+  const cookieStore = await cookies();
+  const countryCookie = cookieStore.get('vmdb_country');
+  const country = mapIsoToCountry(countryCookie?.value);
+
   const [products, categoryStats] = await Promise.all([
     getProducts(),
-    getCategoryStats(),
+    getCategoryStats(country),
   ]);
 
   return (

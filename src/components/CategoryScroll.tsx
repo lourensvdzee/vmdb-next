@@ -9,6 +9,7 @@ interface CategoryStats {
   category: string;
   displayName: string;
   count: number;
+  subcategories: string[];
 }
 
 interface CategoryScrollProps {
@@ -82,7 +83,7 @@ export default function CategoryScroll({ categories }: CategoryScrollProps) {
         {categories.map((stat) => (
           <Link
             key={stat.category}
-            href={`/search?category=${encodeURIComponent(stat.displayName)}`}
+            href={`/search?category=${encodeURIComponent(stat.category)}`}
             className="category-icon-hover flex flex-col items-center gap-3 p-4 rounded-lg transition-all hover:bg-accent active:scale-95 flex-shrink-0 w-[120px] snap-start group"
           >
             <div className="rounded-full bg-primary/10 p-4 text-primary group-hover:bg-primary transition-colors">

@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import HomeHero from '@/components/HomeHero';
@@ -5,26 +6,15 @@ import CategoryScroll from '@/components/CategoryScroll';
 import HorizontalProductScroll from '@/components/HorizontalProductScroll';
 import HorizontalReviewScroll from '@/components/HorizontalReviewScroll';
 import AnimatedSubtitle from '@/components/AnimatedSubtitle';
+import { groupCategories, CategoryStats, GROUPING_RULES } from '@/lib/categories';
 
-// Category grouping rules
-const GROUPING_RULES: Record<string, { keywords: string[]; en: string }> = {
-  'BURGER': { keywords: ['burger'], en: 'Burgers' },
-  'SAUSAGES': { keywords: ['wurst', 'bratwurst', 'leberwurst', 'sausage', 'worst', 'hotdog'], en: 'Sausages' },
-  'NUGGETS': { keywords: ['nugget', 'bites'], en: 'Nuggets' },
-  'CHICKEN': { keywords: ['kip', 'kipfilet', 'kipschnitzel', 'chicken', 'döner', 'doner', 'gyros', 'kebab'], en: 'Chicken' },
-  'MINCE': { keywords: ['mince', 'gehakt'], en: 'Mince' },
-  'SCHNITZEL': { keywords: ['schnitzel', 'cordon bleu'], en: 'Schnitzel' },
-  'MEATBALLS': { keywords: ['hackbällchen', 'gemüsebällchen', 'falafel', 'frikadelle', 'meatball', 'gehaktbal', 'bal'], en: 'Meatballs' },
-  'DELI': { keywords: ['brotbelag', 'cold cut', 'opsnij', 'vleeswaren', 'lachsschinken'], en: 'Deli' },
-  'BACON': { keywords: ['bacon', 'spek', 'spekjes', 'speck'], en: 'Bacon' },
-  'FISH': { keywords: ['fisch', 'fischstäbchen', 'fish', 'vis', 'zalm', 'tuna', 'tonijn'], en: 'Fish' },
-  'TOFU': { keywords: ['tofu', 'tempeh'], en: 'Tofu' },
-};
-
-interface CategoryStats {
-  category: string;
-  displayName: string;
-  count: number;
+// Map ISO code to country name
+function mapIsoToCountry(code?: string): string | undefined {
+  if (!code) return undefined;
+  const upper = code.toUpperCase();
+  if (upper === 'DE') return 'Germany';
+  if (upper === 'NL') return 'Netherlands';
+  return undefined;
 }
 
 // Fetch top rated products with ratings
@@ -78,8 +68,8 @@ async function getTopProducts() {
     .slice(0, 12);
 }
 
-// Fetch grouped categories with counts
-async function getCategories(): Promise<CategoryStats[]> {
+// Fetch grouped categories with counts (localized)
+async function getCategories(country?: string): Promise<CategoryStats[]> {
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -97,32 +87,7 @@ async function getCategories(): Promise<CategoryStats[]> {
     }
   });
 
-  const grouped = new Map<string, { count: number; displayName: string }>();
-
-  Object.entries(GROUPING_RULES).forEach(([key, rule]) => {
-    grouped.set(key, { count: 0, displayName: rule.en });
-  });
-
-  categoryCounts.forEach((count, category) => {
-    const lowerCategory = category.toLowerCase().trim();
-
-    for (const [groupKey, rule] of Object.entries(GROUPING_RULES)) {
-      if (rule.keywords.some(keyword => lowerCategory.includes(keyword))) {
-        const current = grouped.get(groupKey)!;
-        current.count += count;
-        return;
-      }
-    }
-  });
-
-  return Array.from(grouped.entries())
-    .filter(([, data]) => data.count > 0)
-    .map(([category, data]) => ({
-      category,
-      displayName: data.displayName,
-      count: data.count,
-    }))
-    .sort((a, b) => b.count - a.count);
+  return groupCategories(categoryCounts, country);
 }
 
 // Fetch latest reviews
@@ -177,9 +142,14 @@ async function getLatestReviews() {
 }
 
 export default async function HomePage() {
+  // Read country from cookie for localization
+  const cookieStore = await cookies();
+  const countryCookie = cookieStore.get('vmdb_country');
+  const country = mapIsoToCountry(countryCookie?.value);
+
   const [topProducts, categories, latestReviews] = await Promise.all([
     getTopProducts(),
-    getCategories(),
+    getCategories(country),
     getLatestReviews(),
   ]);
 

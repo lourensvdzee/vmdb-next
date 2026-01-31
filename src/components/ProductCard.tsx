@@ -90,7 +90,7 @@ export default function ProductCard({
               );
             })}
             <span className="ml-2 text-sm text-muted-foreground">
-              {rating.toFixed(1)}
+              {rating.toFixed(1)} / 5
             </span>
           </div>
         </CardContent>

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
+import { GROUPING_RULES, getLocalizedName } from "@/lib/categories";
 
 interface Product {
   id: number;
@@ -24,7 +25,9 @@ interface Product {
 
 interface CategoryStat {
   category: string;
+  displayName: string;
   count: number;
+  subcategories: string[];
 }
 
 interface SearchClientProps {
@@ -75,9 +78,19 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
       filtered = filtered.filter(p => p.vegan);
     }
 
-    // Apply category filter
+    // Apply category filter using GROUPING_RULES keywords
     if (selectedCategory !== "all") {
-      filtered = filtered.filter(p => p.category === selectedCategory);
+      const rule = GROUPING_RULES[selectedCategory];
+      if (rule) {
+        filtered = filtered.filter(p => {
+          if (!p.category) return false;
+          const lowerCategory = p.category.toLowerCase();
+          return rule.keywords.some(keyword => lowerCategory.includes(keyword));
+        });
+      } else {
+        // Fallback: direct match
+        filtered = filtered.filter(p => p.category === selectedCategory);
+      }
     }
 
     // Apply store filter
@@ -191,7 +204,7 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
               <SelectItem value="all">All Categories</SelectItem>
               {categoryStats.map(stat => (
                 <SelectItem key={stat.category} value={stat.category}>
-                  {stat.category} ({stat.count})
+                  {stat.displayName} ({stat.count})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -225,7 +238,7 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
             )}
             {selectedCategory !== "all" && (
               <Badge variant="secondary" className="gap-1">
-                {selectedCategory}
+                {categoryStats.find(s => s.category === selectedCategory)?.displayName || selectedCategory}
                 <button onClick={() => setSelectedCategory("all")} className="ml-1 hover:text-destructive">×</button>
               </Badge>
             )}
