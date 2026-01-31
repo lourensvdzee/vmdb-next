@@ -120,28 +120,32 @@ const ReviewDialog = ({ open, onOpenChange, productId, productName, productCateg
     setIsPending(true);
 
     try {
-      // For unauthenticated users, save to pending_ratings table
+      // For unauthenticated users, save directly to comments table (visible immediately)
       if (!currentUser && authorEmail) {
-        const { error: pendingError } = await supabase
-          .from('pending_ratings')
+        const now = new Date().toISOString();
+        const { error: commentError } = await supabase
+          .from('comments')
           .insert({
-            email: authorEmail,
             product_id: productId,
-            product_name: productName,
             author_name: authorName || "Anonymous",
+            display_name: authorName || "Anonymous",
+            author_email: authorEmail,
+            comment_date: now,
+            comment_text: review || '',
             overall_rating: rating,
-            review_content: review || '',
+            is_approved: 1,
+            user_id: null,
             taste_rating: tasteRating > 0 ? tasteRating : null,
             texture_rating: textureRating > 0 ? textureRating : null,
             value_rating: valueRating > 0 ? valueRating : null,
             meat_similarity_rating: meatSimilarityRating > 0 ? meatSimilarityRating : null,
           });
 
-        if (pendingError) {
-          if (pendingError.message.includes("duplicate key") || pendingError.message.includes("idx_one_rating_per_email_product")) {
+        if (commentError) {
+          if (commentError.message.includes("duplicate key") || commentError.code === '23505') {
             toast.error("You've already reviewed this product. You can only submit one review per product.");
           } else {
-            console.error('Error submitting pending rating:', pendingError);
+            console.error('Error submitting guest review:', commentError);
             toast.error("Failed to submit review. Please try again.");
           }
           setIsPending(false);
@@ -235,10 +239,10 @@ const ReviewDialog = ({ open, onOpenChange, productId, productName, productCateg
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 sm:space-y-4 py-2 sm:py-4">
+        <div className="space-y-4 sm:space-y-5 py-2 sm:py-4">
           {!currentUser && (
-            <div className="space-y-2">
-              <label htmlFor="review-name" className="text-sm font-medium">Display Name</label>
+            <div className="space-y-3">
+              <label htmlFor="review-name" className="text-sm font-medium block">Display Name</label>
               <Input
                 id="review-name"
                 name="name"
@@ -254,8 +258,8 @@ const ReviewDialog = ({ open, onOpenChange, productId, productName, productCateg
           )}
 
           {!currentUser && (
-            <div className="space-y-2">
-              <label htmlFor="review-email" className="text-sm font-medium">Your Email</label>
+            <div className="space-y-3">
+              <label htmlFor="review-email" className="text-sm font-medium block">Your Email</label>
               <Input
                 id="review-email"
                 name="email"
@@ -344,8 +348,8 @@ const ReviewDialog = ({ open, onOpenChange, productId, productName, productCateg
           </div>
 
           {/* Review Text */}
-          <div className="space-y-2">
-            <label htmlFor="review-text" className="text-sm font-medium">Your Review</label>
+          <div className="space-y-3">
+            <label htmlFor="review-text" className="text-sm font-medium block">Your Review</label>
             <Textarea
               id="review-text"
               name="review"
