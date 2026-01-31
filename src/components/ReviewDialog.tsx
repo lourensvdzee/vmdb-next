@@ -168,20 +168,19 @@ const ReviewDialog = ({ open, onOpenChange, productId, productName, productCateg
         }
       } else {
         // For authenticated users, save directly to comments table
-        const slug = productName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+        const now = new Date().toISOString();
 
         const { error: commentError } = await supabase
           .from('comments')
           .insert({
             product_id: productId,
-            product_title: productName,
-            product_slug: slug,
             author_name: authorName || "Anonymous",
             display_name: authorName || "Anonymous",
+            author_email: currentUser?.email || '',
+            comment_date: now,
             comment_text: review || '',
             overall_rating: rating,
             user_id: currentUser?.id || null,
-            user_email: currentUser?.email || null,
             taste_rating: tasteRating > 0 ? tasteRating : null,
             texture_rating: textureRating > 0 ? textureRating : null,
             value_rating: valueRating > 0 ? valueRating : null,
