@@ -105,18 +105,38 @@ export default function ProductPageClient({
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{product.product_name}</h1>
             <p className="text-xl text-muted-foreground mb-4">{product.brand}</p>
 
-            {/* Rating with animated stars - always show, with Rate button */}
+            {/* Rating with animated stars - clickable to scroll to reviews */}
             <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <AnimatedStarRating
-                  rating={avgRating ? parseFloat(avgRating) : 0}
-                  size="lg"
-                  showValue={true}
-                />
-                <span className="text-sm text-muted-foreground">
-                  ({comments.length} {comments.length === 1 ? 'review' : 'reviews'})
-                </span>
-              </div>
+              {comments.length > 0 ? (
+                <a
+                  href="#reviews"
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <AnimatedStarRating
+                    rating={avgRating ? parseFloat(avgRating) : 0}
+                    size="lg"
+                    showValue={true}
+                  />
+                  <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    ({comments.length} {comments.length === 1 ? 'review' : 'reviews'})
+                  </span>
+                </a>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <AnimatedStarRating
+                    rating={0}
+                    size="lg"
+                    showValue={true}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    (0 reviews)
+                  </span>
+                </div>
+              )}
               <Button
                 variant="default"
                 size="default"
@@ -350,7 +370,7 @@ export default function ProductPageClient({
         />
 
         {/* Reviews section */}
-        <div>
+        <div id="reviews">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold">Reviews</h2>
             <Button

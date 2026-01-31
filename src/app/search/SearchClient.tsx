@@ -167,8 +167,13 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
             placeholder="Search plant-based meat..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10 sm:h-12 placeholder:text-xs sm:placeholder:text-sm"
+            className="pl-10 h-10 sm:h-12 placeholder:text-xs sm:placeholder:text-sm placeholder:transition-none"
             autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-lpignore="true"
+            data-form-type="other"
           />
         </div>
       </form>
