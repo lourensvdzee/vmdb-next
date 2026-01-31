@@ -27,7 +27,7 @@ export const GROUPING_RULES: Record<string, CategoryRule> = {
   'BACON': { keywords: ['bacon', 'spek', 'spekjes', 'speck'], nl: 'Spek', de: 'Speck', en: 'Bacon' },
   'BEEF': { keywords: ['rind', 'rindfleisch', 'beef', 'steak', 'biefstuk'], nl: 'Rund', de: 'Rind', en: 'Beef' },
   'FILET': { keywords: ['filet', 'fillet'], nl: 'Filet', de: 'Filet', en: 'Filet' },
-  'FISH': { keywords: ['fisch', 'fischstäbchen', 'fish', 'vis', 'zalm', 'lachs', 'tuna', 'tonijn'], nl: 'Vis', de: 'Fisch', en: 'Fish' },
+  'FISH': { keywords: ['fisch', 'fischstäbchen', 'fish', 'vis', 'zalm', 'lachsfilet', 'tuna', 'tonijn'], nl: 'Vis', de: 'Fisch', en: 'Fish' },
   'TOFU': { keywords: ['tofu', 'tempeh'], nl: 'Tofu', de: 'Tofu', en: 'Tofu' },
 };
 
