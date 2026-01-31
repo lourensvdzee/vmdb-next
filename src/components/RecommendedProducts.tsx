@@ -242,16 +242,31 @@ const RecommendedProducts = ({ currentProductId, currentProductCategory }: Recom
                 <p className="text-sm text-muted-foreground truncate">{product.brand}</p>
                 {product.avg_rating ? (
                   <div className="flex items-center gap-1 mt-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${
-                          star <= Math.round(product.avg_rating!)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "fill-muted text-muted"
-                        }`}
-                      />
-                    ))}
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const rating = product.avg_rating!;
+                      const isFilled = i < Math.floor(rating);
+                      const isPartial = i === Math.floor(rating) && rating % 1 !== 0;
+
+                      return (
+                        <div key={i} className="relative">
+                          <Star
+                            className={`h-4 w-4 ${
+                              isFilled
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "fill-muted text-muted"
+                            }`}
+                          />
+                          {isPartial && (
+                            <div
+                              className="absolute top-0 left-0 overflow-hidden"
+                              style={{ width: `${(rating % 1) * 100}%` }}
+                            >
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                     <span className="text-sm font-medium ml-1">{product.avg_rating.toFixed(1)} / 5</span>
                   </div>
                 ) : (

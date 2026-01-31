@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import ReviewForm from "@/components/ReviewForm";
+import ReviewDialog from "@/components/ReviewDialog";
 import SubRatingsDisplay from "@/components/SubRatingsDisplay";
 import AnimatedStarRating from "@/components/AnimatedStarRating";
 import AnimatedSubtitle from "@/components/AnimatedSubtitle";
@@ -38,6 +38,7 @@ export default function ProductPageClient({
   const router = useRouter();
   const supabase = getSupabaseClient();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   // Check authentication status
   useEffect(() => {
@@ -118,10 +119,7 @@ export default function ProductPageClient({
               <Button
                 variant="default"
                 size="default"
-                onClick={() => {
-                  // Scroll to review form
-                  document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => setReviewDialogOpen(true)}
                 className="gap-2"
               >
                 <Star className="h-4 w-4" />
@@ -350,17 +348,12 @@ export default function ProductPageClient({
           currentProductCategory={product.category}
         />
 
-        {/* Review Form */}
-        <div id="review-form" className="mb-8">
-          <ReviewForm productId={product.product_id} productName={product.product_name} />
-        </div>
-
         {/* Reviews section */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold">Reviews</h2>
             <Button
-              onClick={() => document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => setReviewDialogOpen(true)}
               size="lg"
             >
               <Star className="mr-2 h-5 w-5" />
@@ -372,7 +365,7 @@ export default function ProductPageClient({
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground mb-4">No reviews yet. Be the first to review this product!</p>
-                <Button onClick={() => document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Button onClick={() => setReviewDialogOpen(true)}>
                   Write a Review
                 </Button>
               </CardContent>
@@ -448,6 +441,15 @@ export default function ProductPageClient({
           <AnimatedSubtitle />
         </div>
       </div>
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
+        productId={product.product_id}
+        productName={product.product_name}
+        productCategory={product.category}
+      />
     </main>
   );
 }
