@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import { GROUPING_RULES, getLocalizedName } from "@/lib/categories";
+import { GROUPING_RULES } from "@/lib/categories";
 
 interface Product {
   id: number;
