@@ -52,9 +52,16 @@ export default function HeaderClient() {
   // Track if initial session check is done (to avoid showing welcome toast on page load)
   const initialSessionCheckedRef = useRef(false);
   // Use sessionStorage to persist welcome toast state across tab switches (but reset on browser close)
-  const hasShownWelcomeRef = useRef(
-    typeof window !== 'undefined' && sessionStorage.getItem('vmdb_welcome_shown') === 'true'
-  );
+  const hasShownWelcomeRef = useRef(false);
+
+  // Check sessionStorage on mount (can't do this in useRef initializer due to SSR)
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('vmdb_welcome_shown') === 'true') {
+        hasShownWelcomeRef.current = true;
+      }
+    } catch {}
+  }, []);
   const [availableCountries] = useState<string[]>(['Germany', 'Netherlands']);
   const [countryDraft, setCountryDraft] = useState<string>(activeCountryName || '');
 
@@ -156,10 +163,14 @@ export default function HeaderClient() {
   useEffect(() => {
     if (justDetected) {
       const label = activeCountryName || 'World';
-      toast.message(`Showing products available in ${label} (based on your location).`, {
+      // Make message clearer about what location detection means
+      const message = activeCountryName
+        ? `Filtering products available in ${label}. You can change this anytime.`
+        : `Showing all products worldwide. Select a country to filter by availability.`;
+      toast.message(message, {
         position: 'top-center',
         action: {
-          label: 'Change',
+          label: activeCountryName ? 'Change' : 'Select Country',
           onClick: () => setCountryDialogOpen(true),
         },
       });

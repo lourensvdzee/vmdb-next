@@ -35,6 +35,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, Edit, Save, X, Trash2, Upload, Star, Settings, ChevronDown, LogOut } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { useCountry } from "@/hooks/use-country";
 
 interface Profile {
   id: string;
@@ -86,6 +87,7 @@ interface ProfileClientProps {
 export default function ProfileClient({ profile, userEmail, reviews }: ProfileClientProps) {
   const router = useRouter();
   const supabase = getSupabaseClient();
+  const { activeCountryName: selectedCountryFilter } = useCountry();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -134,10 +136,24 @@ export default function ProfileClient({ profile, userEmail, reviews }: ProfileCl
     async function fetchRecommended() {
       if (!profile?.id) return;
 
-      const { data: products } = await supabase
+      // Build query with optional country filter
+      let query = supabase
         .from("products")
         .select("product_id, product_name, brand, product_image_url, slug")
-        .eq("product_status", "publish")
+        .eq("product_status", "publish");
+
+      // Apply country filter if a country is selected
+      if (selectedCountryFilter) {
+        const isoMap: Record<string, string> = { 'Germany': 'DE', 'Netherlands': 'NL' };
+        const isoCode = isoMap[selectedCountryFilter];
+        if (isoCode) {
+          query = query.or(`country.eq.${selectedCountryFilter},country.eq.${isoCode}`);
+        } else {
+          query = query.eq('country', selectedCountryFilter);
+        }
+      }
+
+      const { data: products } = await query
         .order("product_id", { ascending: false })
         .limit(20);
 
@@ -182,7 +198,7 @@ export default function ProfileClient({ profile, userEmail, reviews }: ProfileCl
     }
 
     fetchRecommended();
-  }, [profile?.id, supabase]);
+  }, [profile?.id, supabase, selectedCountryFilter]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

@@ -2,12 +2,13 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Filter, Leaf, ArrowUpDown, ArrowLeft, Camera, Mail } from "lucide-react";
+import { Search, Filter, Leaf, ArrowUpDown, ArrowLeft, Camera, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
+import UploadWizard from "@/components/UploadWizard";
 import Link from "next/link";
 
 interface Product {
@@ -44,6 +45,7 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
   const [selectedStore, setSelectedStore] = useState("all");
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "rating");
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   // Extract unique stores from products
   const stores = useMemo(() => {
@@ -324,17 +326,13 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
                   Couldn't find this product?
                 </p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Help us add it to VMDb! Send us the product details and we'll add it to our database.
+                  Help us add it to VMDb! Upload photos and we'll extract the info automatically.
                 </p>
               </div>
-              <a
-                href={`mailto:vmdb.me@gmail.com?subject=New Product Suggestion: ${encodeURIComponent(searchQuery)}&body=Hi VMDb team,%0A%0AI'd like to suggest adding this product:%0A%0AProduct name: ${encodeURIComponent(searchQuery)}%0ABrand: %0AStore where I found it: %0A%0AThanks!`}
-              >
-                <Button size="lg" className="gap-2">
-                  <Mail className="h-5 w-5" />
-                  Suggest this product
-                </Button>
-              </a>
+              <Button size="lg" className="gap-2" onClick={() => setUploadOpen(true)}>
+                <Upload className="h-5 w-5" />
+                Help us add it!
+              </Button>
             </div>
           )}
 
@@ -379,6 +377,8 @@ export default function SearchClient({ initialProducts, categoryStats }: SearchC
           )}
         </div>
       )}
+
+      <UploadWizard open={uploadOpen} onOpenChange={setUploadOpen} searchQuery={searchQuery} />
     </>
   );
 }

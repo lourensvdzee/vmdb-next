@@ -60,29 +60,26 @@ export async function generateMetadata({
 
   // Calculate average rating
   let ratingText = '';
+  let avgRating = 0;
   if (comments && comments.length > 0) {
-    const avgRating = comments.reduce((sum, c) => sum + (c.overall_rating || 0), 0) / comments.length;
-    ratingText = ` - Rated ${avgRating.toFixed(1)}/5 by ${comments.length} ${comments.length === 1 ? 'reviewer' : 'reviewers'}`;
+    avgRating = comments.reduce((sum, c) => sum + (c.overall_rating || 0), 0) / comments.length;
+    ratingText = `Rated ${avgRating.toFixed(1)}/5`;
   }
 
-  // Build description with product info and rating
-  const baseDescription = product.short_description
-    || product.description
-    || `Plant-based ${product.category || 'meat alternative'} from ${product.brand}`;
-
-  const metaDescription = `${baseDescription.length > 100 ? baseDescription.substring(0, 97) + '...' : baseDescription}${ratingText}`;
-
-  // Enhanced title with brand - format: "Product Name from Brand"
-  const title = `${product.product_name} from ${product.brand}`;
-  const ogTitle = `${product.product_name} from ${product.brand} - Plant-based meat`;
-
   const productUrl = `https://vmdb.me/product/${product.product_id}${product.slug ? `/${product.slug}` : ''}`;
-  const imageUrl = product.product_image_url || 'https://vmdb.me/logo.png';
 
-  // Social sharing description - more engaging
-  const socialDescription = ratingText
-    ? `See our community's rating for ${product.product_name} from ${product.brand}${ratingText}. Discover plant-based meat alternatives on VMDb.`
-    : `Discover ${product.product_name} from ${product.brand}. Read reviews and ratings for this plant-based meat alternative on VMDb.`;
+  // Use absolute URL for image - ensure it's a full URL
+  const imageUrl = product.product_image_url
+    ? (product.product_image_url.startsWith('http') ? product.product_image_url : `https://vmdb.me${product.product_image_url}`)
+    : 'https://vmdb.me/logo.png';
+
+  // Title: <product_name> - Plant-based product reviews
+  const title = `${product.product_name} - Plant-based product reviews`;
+
+  // Description: See our community's rating for <product_name> - Rated <rating>/5
+  const metaDescription = ratingText
+    ? `See our community's rating for ${product.product_name} - ${ratingText}`
+    : `See reviews for ${product.product_name} on VMDb - the plant-based meat database.`;
 
   return {
     title: `${title} | VMDb`,
@@ -92,8 +89,8 @@ export async function generateMetadata({
     },
     openGraph: {
       type: 'website',
-      title: ogTitle,
-      description: socialDescription,
+      title: title,
+      description: metaDescription,
       url: productUrl,
       siteName: 'VMDb - Plant-Based Meat Database',
       images: [
@@ -101,14 +98,14 @@ export async function generateMetadata({
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: `${product.product_name} by ${product.brand}`,
+          alt: product.product_name,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: ogTitle,
-      description: socialDescription,
+      title: title,
+      description: metaDescription,
       images: [imageUrl],
     },
   };

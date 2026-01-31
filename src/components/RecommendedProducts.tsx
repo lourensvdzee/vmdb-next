@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { useCountry } from "@/hooks/use-country";
 
 interface Product {
   id: number;
@@ -79,6 +80,7 @@ const RecommendedProducts = ({ currentProductId, currentProductCategory }: Recom
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = getSupabaseClient();
+  const { activeCountryName } = useCountry();
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return;
@@ -99,12 +101,25 @@ const RecommendedProducts = ({ currentProductId, currentProductCategory }: Recom
       const mainCategoryGroup = getMainCategoryGroup(currentProductCategory);
       const subcategoryKeywords = getSubcategoriesForMainGroup(mainCategoryGroup);
 
-      const { data: allProducts, error } = await supabase
+      // Build query with optional country filter
+      let query = supabase
         .from("products")
         .select("product_id, product_name, brand, product_image_url, category, slug")
         .eq('product_status', 'publish')
-        .neq('product_id', currentProductId)
-        .limit(50);
+        .neq('product_id', currentProductId);
+
+      // Apply country filter if a country is selected
+      if (activeCountryName) {
+        const isoMap: Record<string, string> = { 'Germany': 'DE', 'Netherlands': 'NL' };
+        const isoCode = isoMap[activeCountryName];
+        if (isoCode) {
+          query = query.or(`country.eq.${activeCountryName},country.eq.${isoCode}`);
+        } else {
+          query = query.eq('country', activeCountryName);
+        }
+      }
+
+      const { data: allProducts, error } = await query.limit(50);
 
       if (error || !allProducts) {
         setIsLoading(false);
@@ -179,7 +194,7 @@ const RecommendedProducts = ({ currentProductId, currentProductCategory }: Recom
     };
 
     fetchRecommendedProducts();
-  }, [currentProductId, currentProductCategory, supabase]);
+  }, [currentProductId, currentProductCategory, supabase, activeCountryName]);
 
   if (isLoading) {
     return (

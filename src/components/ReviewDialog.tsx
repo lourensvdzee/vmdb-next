@@ -153,19 +153,27 @@ const ReviewDialog = ({ open, onOpenChange, productId, productName, productCateg
         }
 
         // Send magic link for account creation
-        const { error: otpError } = await supabase.auth.signInWithOtp({
+        console.log('[ReviewDialog] Attempting magic link for:', authorEmail);
+        console.log('[ReviewDialog] Redirect URL:', `${window.location.origin}/`);
+
+        const { data: otpData, error: otpError } = await supabase.auth.signInWithOtp({
           email: authorEmail,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
 
+        console.log('[ReviewDialog] OTP response:', { data: otpData, error: otpError });
+
         if (otpError) {
-          console.error('Magic link error:', otpError);
+          console.error('[ReviewDialog] Magic link error:', otpError.status, otpError.message);
           // Show review success but warn about email issue
           toast.success("Review submitted successfully!");
           toast.error(`Could not send account email: ${otpError.message}. Contact support if this persists.`);
         } else {
+          // Note: Supabase returns success even if email is rate-limited or blocked
+          // The only way to know for sure is to check if the email arrives
+          console.log('[ReviewDialog] Magic link request accepted by Supabase');
           toast.success("Review submitted! Check your email to create your VMDb account and unlock more features.");
         }
       } else {

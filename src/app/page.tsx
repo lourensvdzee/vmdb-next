@@ -17,15 +17,28 @@ function mapIsoToCountry(code?: string): string | undefined {
   return undefined;
 }
 
-// Fetch top rated products with ratings
-async function getTopProducts() {
+// Fetch top rated products with ratings (filtered by country if specified)
+async function getTopProducts(country?: string) {
   const supabase = await createClient();
 
-  const { data: products } = await supabase
+  let query = supabase
     .from('products')
     .select('product_id, product_name, product_image_url, brand, category, slug, is_vegan')
-    .eq('product_status', 'publish')
-    .limit(100);
+    .eq('product_status', 'publish');
+
+  // Apply country filter if specified
+  if (country) {
+    // Map country name to ISO code for OR filter
+    const isoMap: Record<string, string> = { 'Germany': 'DE', 'Netherlands': 'NL' };
+    const isoCode = isoMap[country];
+    if (isoCode) {
+      query = query.or(`country.eq.${country},country.eq.${isoCode}`);
+    } else {
+      query = query.eq('country', country);
+    }
+  }
+
+  const { data: products } = await query.limit(100);
 
   if (!products || products.length === 0) return [];
 
@@ -148,7 +161,7 @@ export default async function HomePage() {
   const country = mapIsoToCountry(countryCookie?.value);
 
   const [topProducts, categories, latestReviews] = await Promise.all([
-    getTopProducts(),
+    getTopProducts(country),
     getCategories(country),
     getLatestReviews(),
   ]);
