@@ -6,7 +6,7 @@ import CategoryScroll from '@/components/CategoryScroll';
 import HorizontalProductScroll from '@/components/HorizontalProductScroll';
 import HorizontalReviewScroll from '@/components/HorizontalReviewScroll';
 import AnimatedSubtitle from '@/components/AnimatedSubtitle';
-import { groupCategories, CategoryStats, GROUPING_RULES } from '@/lib/categories';
+import { groupCategories, CategoryStats } from '@/lib/categories';
 
 // Map ISO code to country name
 function mapIsoToCountry(code?: string): string | undefined {
