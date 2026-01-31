@@ -14,6 +14,10 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /profile/
+Disallow: /login
+Disallow: /reset-password
+Disallow: /auth/
 
 # Sitemap
 Sitemap: https://vmdb.me/sitemap.xml
