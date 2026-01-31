@@ -16,6 +16,7 @@ import SignupConversionCTA from "@/components/SignupConversionCTA";
 import RecommendedProducts from "@/components/RecommendedProducts";
 import { retailerLogos, storeUrls } from "@/lib/retailer-logos";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface ProductPageClientProps {
   product: any;
@@ -381,8 +382,14 @@ export default function ProductPageClient({
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-4">
                         <Avatar
-                          className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => comment.user_id && router.push(`/profile/${comment.user_id}`)}
+                          className={`h-10 w-10 transition-opacity ${comment.user_id ? 'cursor-pointer hover:opacity-80' : ''}`}
+                          onClick={() => {
+                            if (comment.user_id) {
+                              router.push(`/profile/${comment.user_id}`);
+                            } else {
+                              toast.info("This user hasn't created a profile yet");
+                            }
+                          }}
                         >
                           {comment.avatar_url && <AvatarImage src={comment.avatar_url} alt={displayName} />}
                           <AvatarFallback className="text-sm">{initials}</AvatarFallback>
@@ -392,8 +399,14 @@ export default function ProductPageClient({
                           <div className="flex items-start justify-between mb-3">
                             <div>
                               <p
-                                className="font-semibold cursor-pointer hover:text-primary transition-colors"
-                                onClick={() => comment.user_id && router.push(`/profile/${comment.user_id}`)}
+                                className={`font-semibold transition-colors ${comment.user_id ? 'cursor-pointer hover:text-primary' : ''}`}
+                                onClick={() => {
+                                  if (comment.user_id) {
+                                    router.push(`/profile/${comment.user_id}`);
+                                  } else {
+                                    toast.info("This user hasn't created a profile yet");
+                                  }
+                                }}
                               >
                                 {displayName}
                               </p>

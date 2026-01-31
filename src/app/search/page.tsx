@@ -42,7 +42,7 @@ async function getProducts(country?: string) {
       store_name,
       country
     `)
-    .eq('product_status', 'publish');
+    .in('product_status', ['publish', 'published']);
 
   // Apply country filter if specified (not World/EU)
   if (country && country !== 'World') {
@@ -113,7 +113,7 @@ async function getCategoryStats(country?: string): Promise<CategoryStats[]> {
   let query = supabase
     .from('products')
     .select('category')
-    .eq('product_status', 'publish');
+    .in('product_status', ['publish', 'published']);
 
   // Apply country filter if specified (not World/EU)
   if (country && country !== 'World') {
