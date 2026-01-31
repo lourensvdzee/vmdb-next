@@ -13,17 +13,23 @@ function mapIsoToCountry(code?: string): string | undefined {
   return undefined;
 }
 
+// Country name to ISO code mapping for database queries
+const COUNTRY_ISO_MAP: Record<string, string> = {
+  'Netherlands': 'NL',
+  'Germany': 'DE',
+};
+
 export const metadata: Metadata = {
   title: 'Search Products | VMDb',
   description: 'Search and filter plant-based meat alternatives on VMDb.',
 };
 
 // Fetch all published products with ratings from comments
-async function getProducts() {
+async function getProducts(country?: string) {
   const supabase = await createClient();
 
-  // Fetch products
-  const { data: products, error } = await supabase
+  // Build query
+  let query = supabase
     .from('products')
     .select(`
       product_id,
@@ -33,10 +39,24 @@ async function getProducts() {
       category,
       slug,
       is_vegan,
-      store_name
+      store_name,
+      country
     `)
-    .eq('product_status', 'publish')
-    .order('product_name', { ascending: true });
+    .eq('product_status', 'publish');
+
+  // Apply country filter if specified (not World/EU)
+  if (country && country !== 'World') {
+    const isoCode = COUNTRY_ISO_MAP[country];
+    if (isoCode) {
+      // Query for EITHER full name OR ISO code to handle both storage formats
+      query = query.or(`country.eq.${country},country.eq.${isoCode}`);
+    } else {
+      query = query.eq('country', country);
+    }
+  }
+
+  // Execute query
+  const { data: products, error } = await query.order('product_name', { ascending: true });
 
   if (error) {
     console.error('Error fetching products:', error);
@@ -90,10 +110,22 @@ async function getProducts() {
 async function getCategoryStats(country?: string): Promise<CategoryStats[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select('category')
     .eq('product_status', 'publish');
+
+  // Apply country filter if specified (not World/EU)
+  if (country && country !== 'World') {
+    const isoCode = COUNTRY_ISO_MAP[country];
+    if (isoCode) {
+      query = query.or(`country.eq.${country},country.eq.${isoCode}`);
+    } else {
+      query = query.eq('country', country);
+    }
+  }
+
+  const { data, error } = await query;
 
   if (error || !data) {
     return [];
@@ -118,7 +150,7 @@ export default async function SearchPage() {
   const country = mapIsoToCountry(countryCookie?.value);
 
   const [products, categoryStats] = await Promise.all([
-    getProducts(),
+    getProducts(country),
     getCategoryStats(country),
   ]);
 
